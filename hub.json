@@ -141,7 +141,7 @@
           "stack": "Python · MCP · SQLite · Claude Code"
         },
         {
-          "slug": "mcp-memory-server", "name": "MCP Memory Server", "mark": "MM", "palette": "teal", "status": "paused",
+          "slug": "mcp-memory-server", "repo": "TED-H-com/mcp-memory-server", "name": "MCP Memory Server", "mark": "MM", "palette": "teal", "status": "paused",
           "line": {
             "en": "An MCP server for long-term agent memory: decisions, resolved issues, open questions, and knowledge that you can inspect.",
             "zh": "給 agent 用的長期記憶 MCP 伺服器：決策、已解決的問題、待回答的問題與知識，都可以檢視。"
