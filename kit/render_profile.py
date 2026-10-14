@@ -31,7 +31,7 @@ import render_hub as H  # noqa: E402
 START = "<!-- projects:start -->"
 END = "<!-- projects:end -->"
 NOTE = "<!-- Generated from hub.json in teddashh/teddashh.github.io by kit/render_profile.py. -->"
-GH = f"https://github.com/{R.OWNER}"
+GH = "https://github.com"
 BADGE = "style=flat-square&amp;color=111111"
 
 TEXT = {
@@ -69,27 +69,26 @@ def display_name(project: dict, lang: str) -> str:
 
 
 def badges(project: dict) -> str:
-    slug, name = project["slug"], html.escape(project["name"], quote=True)
-    out = [f'<a href="{GH}/{slug}/stargazers"><img alt="{name} stars" '
-           f'src="https://img.shields.io/github/stars/{R.OWNER}/{slug}?{BADGE}&amp;label=stars"></a>']
+    repo, name = H.project_repo(project), html.escape(project["name"], quote=True)
+    out = [f'<a href="{GH}/{repo}/stargazers"><img alt="{name} stars" '
+           f'src="https://img.shields.io/github/stars/{repo}?{BADGE}&amp;label=stars"></a>']
     release = project.get("release")
     if release == "latest":
-        out.append(f'<a href="{GH}/{slug}/releases/latest"><img alt="{name} release" '
-                   f'src="https://img.shields.io/github/v/release/{R.OWNER}/{slug}?{BADGE}&amp;label=release"></a>')
+        out.append(f'<a href="{GH}/{repo}/releases/latest"><img alt="{name} release" '
+                   f'src="https://img.shields.io/github/v/release/{repo}?{BADGE}&amp;label=release"></a>')
     elif release == "prerelease":
-        out.append(f'<a href="{GH}/{slug}/releases"><img alt="{name} release" '
-                   f'src="https://img.shields.io/github/v/release/{R.OWNER}/{slug}?include_prereleases&amp;{BADGE}&amp;label=release"></a>')
+        out.append(f'<a href="{GH}/{repo}/releases"><img alt="{name} release" '
+                   f'src="https://img.shields.io/github/v/release/{repo}?include_prereleases&amp;{BADGE}&amp;label=release"></a>')
     return " ".join(out)
 
 
 def row(project: dict, lang: str) -> str:
     t = TEXT[lang]
-    slug = project["slug"]
     page = absolute(H.project_pages(project)[lang])
     status = H.STATUS[project["status"]][lang]
     chip = status.upper() if lang == "en" else status
     stack = " ".join(f"<code>{html.escape(part.strip())}</code>" for part in project["stack"].split("·"))
-    links = [f'<a href="{page}">{t["page"]}</a>', f'<a href="{GH}/{slug}">{t["source"]}</a>']
+    links = [f'<a href="{page}">{t["page"]}</a>', f'<a href="{GH}/{H.project_repo(project)}">{t["source"]}</a>']
     for link in project.get("links", []):
         links.append(f'<a href="{html.escape(absolute(pick(link["href"], lang)), quote=True)}">{html.escape(pick(link["label"], lang))} ↗</a>')
     return f"""  <tr>
@@ -151,7 +150,7 @@ def directory(hub: dict) -> str:
                 page = absolute(H.project_pages(p)[lang])
                 name = display_name(p, lang).replace("|", "\\|")
                 line = p["line"][lang].replace("|", "\\|")
-                rows.append(f"| **[{name}]({page})** · [{t['source']}]({GH}/{p['slug']}) | {line} | "
+                rows.append(f"| **[{name}]({page})** · [{t['source']}]({GH}/{H.project_repo(p)}) | {line} | "
                             f"{H.STATUS[p['status']][lang]} |")
         sections.append("\n".join(head + rows))
     return NOTE + "\n\n" + "\n\n---\n\n".join(sections) + "\n"
@@ -160,7 +159,7 @@ def directory(hub: dict) -> str:
 def pointer(project: dict) -> str:
     pages = {lang: absolute(H.project_pages(project)[lang]) for lang in ("en", "zh")}
     shown = pages["en"].removeprefix("https://").rstrip("/")
-    slug = project["slug"]
+    source = f"{GH}/{H.project_repo(project)}"
     return f"""{NOTE}
 
 <a id="english"></a>
@@ -169,7 +168,7 @@ def pointer(project: dict) -> str:
 
 This write-up moved to the project's own page: **[{shown}]({pages["en"]})**, in English and Traditional Chinese.
 
-[Source on GitHub]({GH}/{slug}) · [All projects]({TEXT["en"]["hub"]}) · [Profile](../README.md)
+[Source on GitHub]({source}) · [All projects]({TEXT["en"]["hub"]}) · [Profile](../README.md)
 
 <a id="traditional-chinese"></a>
 
@@ -177,7 +176,7 @@ This write-up moved to the project's own page: **[{shown}]({pages["en"]})**, in 
 
 這份介紹已經搬到專案自己的頁面：**[{shown}]({pages["zh"]})**，中英文都有。
 
-[GitHub 原始碼]({GH}/{slug}) · [全部專案]({TEXT["zh"]["hub"]}) · [個人首頁](../README.zh-TW.md)
+[GitHub 原始碼]({source}) · [全部專案]({TEXT["zh"]["hub"]}) · [個人首頁](../README.zh-TW.md)
 """
 
 

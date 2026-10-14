@@ -29,6 +29,13 @@ OWNER = "teddashh"
 HUB = f"https://{OWNER}.github.io/"
 SITE_ROOT = f"https://{OWNER}.github.io"
 
+
+def site_root_for(page: dict) -> str:
+    """Pages origin of the account that owns page["repo"]. A repository can move to an organization."""
+    owner = page.get("repo", OWNER).split("/")[0] or OWNER
+    return f"https://{owner.lower()}.github.io"
+
+
 PALETTES = {
     "lime":     dict(ink="#111d19", paper="#f3f0e7", accent="#e9f66f", accent2="#a8c7fa", signal="#ff6b4a", kicker="#287558"),
     "violet":   dict(ink="#1b1530", paper="#f5f2ee", accent="#dccbff", accent2="#ffc9e3", signal="#7c3aed", kicker="#5b3cc4"),
@@ -694,7 +701,7 @@ def render_page(page: dict, assets: dict) -> str:
     repo = page["repo"]
     slug = page["slug"]
     gh = f"https://github.com/{repo}"
-    url = f"{SITE_ROOT}/{slug}/"
+    url = f"{site_root_for(page)}/{slug}/"
     name = page["name"]
     title_en = f'{name} · {text_of(page["title"], "en")}'
     title_zh = f'{name} · {text_of(page["title"], "zh")}'
@@ -1115,7 +1122,7 @@ def main(argv: list[str]) -> int:
     (site / "logo.svg").write_text(logo_svg(page["mark"], pal, 48), encoding="utf-8")
     (site / "favicon.svg").write_text(logo_svg(page["mark"], pal, 64), encoding="utf-8")
     (site / ".nojekyll").write_text("", encoding="utf-8")
-    url = f"{SITE_ROOT}/{page['slug']}/"
+    url = f"{site_root_for(page)}/{page['slug']}/"
     (site / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {url}sitemap.xml\n", encoding="utf-8")
     (site / "sitemap.xml").write_text(
         '<?xml version="1.0" encoding="UTF-8"?>\n'

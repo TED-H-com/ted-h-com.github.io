@@ -10,12 +10,18 @@ kit (render.py). An optional "flows" list uses the same schema as a project
 page: the same checks, the same --fd-* mapping, and flow.js plus flow.css
 only when that list is present. A hub without flows renders the same files
 as before. Standard library only.
+
+A project whose repository moved to another account sets "repo" (owner/name):
+its card links to that account's Pages site, and site/<slug>/ keeps a stand-in
+that forwards the old address. "moved" does the same for a page that is not in
+the directory. Without either, the output does not change.
 """
 
 from __future__ import annotations
 
 import html
 import json
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -59,8 +65,23 @@ def validate(hub: dict) -> list[str]:
                     problems.append(f"{slug}: missing {key}")
             if project.get("status") not in STATUS:
                 problems.append(f"{slug}: status must be one of {sorted(STATUS)}")
+            if "repo" in project:
+                owner, _, name = str(project["repo"]).partition("/")
+                if not REPO_PART.fullmatch(owner) or name != slug:
+                    problems.append(f"{slug}: repo must be owner/{slug}")
+    for repo in hub.get("moved", []):
+        owner, _, name = str(repo).partition("/")
+        if not REPO_PART.fullmatch(owner) or not REPO_PART.fullmatch(name) or name in (".", ".."):
+            problems.append(f"moved: {repo!r} must be owner/name")
+        elif name in seen:
+            problems.append(f"moved: {name} is in the directory, set its repo instead")
+        elif owner.lower() == R.OWNER.lower():
+            problems.append(f"moved: {repo} is still under {R.OWNER}")
     problems.extend(R.validate_flows(hub))
     return problems
+
+
+REPO_PART = re.compile(r"[A-Za-z0-9._-]+")
 
 
 STATUS = {
@@ -74,6 +95,11 @@ STATUS = {
 }
 
 
+def project_repo(project: dict) -> str:
+    """owner/name on GitHub. A project stays under OWNER unless "repo" says otherwise."""
+    return project.get("repo") or f"{R.OWNER}/{project['slug']}"
+
+
 def project_pages(project: dict) -> dict:
     page = project.get("page")
     slug = project["slug"]
@@ -81,7 +107,27 @@ def project_pages(project: dict) -> dict:
         return page
     if isinstance(page, str):
         return {"en": page, "zh": page}
-    return {"en": f"/{slug}/", "zh": f"/{slug}/?lang=zh-TW"}
+    root = R.site_root_for(project)
+    base = "" if root == R.SITE_ROOT else root
+    return {"en": f"{base}/{slug}/", "zh": f"{base}/{slug}/?lang=zh-TW"}
+
+
+def absolute(url: str) -> str:
+    return R.SITE_ROOT + url if url.startswith("/") else url
+
+
+def moved_pages(hub: dict) -> dict:
+    """Old path segment -> (name, Pages origin) for each page that now lives under another account."""
+    moved = {}
+    for group in hub["groups"]:
+        for project in group["projects"]:
+            root = R.site_root_for(project)
+            if root != R.SITE_ROOT:
+                moved[project["slug"]] = (project["name"], root)
+    for repo in hub.get("moved", []):
+        name = repo.split("/")[1]
+        moved[name] = (name, R.site_root_for({"repo": repo}))
+    return moved
 
 
 def per_lang_link(urls: dict, label: dict, cls: str = "") -> str:
@@ -98,7 +144,7 @@ def render_card(project: dict) -> str:
     status_html = R.bi(STATUS[status], "span", f"project-status{' is-active' if status == 'active' else ''}")
     name = {"en": project["name"], "zh": project.get("name_zh", project["name"])}
     links = [per_lang_link(urls, {"en": "Project page →", "zh": "專案介紹 →"})]
-    links.append(f'<a href="https://github.com/{R.OWNER}/{slug}">GitHub</a>')
+    links.append(f'<a href="https://github.com/{project_repo(project)}">GitHub</a>')
     for link in project.get("links", []):
         links.append(R.anchor(link))
     return (
@@ -210,8 +256,8 @@ def render_hub(hub: dict) -> str:
         "description": desc_en,
         "author": {"@type": "Person", "name": "Ted Huang", "url": "https://www.ted-h.com"},
         "hasPart": [
-            {"@type": "SoftwareSourceCode", "name": p["name"], "url": R.SITE_ROOT + project_pages(p)["en"],
-             "codeRepository": f"https://github.com/{R.OWNER}/{p['slug']}"}
+            {"@type": "SoftwareSourceCode", "name": p["name"], "url": absolute(project_pages(p)["en"]),
+             "codeRepository": f"https://github.com/{project_repo(p)}"}
             for g in groups for p in g["projects"]
         ],
     }
@@ -270,6 +316,8 @@ def render_hub(hub: dict) -> str:
 
 
 def render_404(hub: dict) -> str:
+    # moved.js first: a deeper link under a moved page forwards before anything paints.
+    moved = '<script src="/moved.js"></script>\n' if moved_pages(hub) else ""
     return f"""<!doctype html>
 <html lang="en" data-lang="en">
 <head>
@@ -280,7 +328,7 @@ def render_404(hub: dict) -> str:
 <title>{html.escape(hub["name"])} · 404</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/styles.css">
-<script src="/lang.js"></script>
+{moved}<script src="/lang.js"></script>
 </head>
 <body>
 <main class="notfound">
@@ -290,6 +338,51 @@ def render_404(hub: dict) -> str:
 </main>
 </body>
 </html>
+"""
+
+
+def render_moved(name: str, url: str) -> str:
+    """Stand-in at the old address of a page that moved with its repository. moved.js
+    forwards with the rest of the path and the query; the refresh covers a browser
+    without scripts."""
+    return f"""<!doctype html>
+<html lang="en" data-lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="{CSP}">
+<title>{html.escape(name)} has moved</title>
+<link rel="canonical" href="{R.href(url)}">
+<script src="/moved.js"></script>
+<meta http-equiv="refresh" content="0; url={R.href(url)}">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/styles.css">
+<script src="/lang.js"></script>
+</head>
+<body>
+<main class="notfound">
+<div class="eyebrow">{html.escape(name)}</div>
+{R.bi({"en": "This page has moved.", "zh": "這個頁面已經搬家了。"}, "h2")}
+<p><a class="button button-primary" href="{R.href(url)}">{R.bi({"en": "Open the new page", "zh": "前往新頁面"})}</a></p>
+</main>
+</body>
+</html>
+"""
+
+
+# Written to site/moved.js only when a page has moved; {moved} maps each old path
+# segment to the Pages origin it moved to.
+MOVED_JS = """/* Generated from hub.json by kit/render_hub.py. Sends a visitor of a page that
+   moved to another account's GitHub Pages site there, keeping the rest of the
+   path, the ?lang= choice and the #hash. */
+(function () {
+  var moved = {moved};
+  var path = window.location.pathname;
+  var slug = path.split("/")[1];
+  if (Object.prototype.hasOwnProperty.call(moved, slug)) {
+    window.location.replace(moved[slug] + path + window.location.search + window.location.hash);
+  }
+})();
 """
 
 
@@ -352,6 +445,13 @@ def main(argv: list[str]) -> int:
         shutil.copyfile(KIT / "flow.css", site / "flow.css")
     (site / "index.html").write_text(page, encoding="utf-8")
     (site / "404.html").write_text(render_404(hub), encoding="utf-8")
+    moved = moved_pages(hub)
+    if moved:
+        origins = {slug: origin for slug, (_, origin) in sorted(moved.items())}
+        (site / "moved.js").write_text(MOVED_JS.replace("{moved}", json.dumps(origins)), encoding="utf-8")
+        for slug, (name, origin) in moved.items():
+            (site / slug).mkdir(exist_ok=True)
+            (site / slug / "index.html").write_text(render_moved(name, f"{origin}/{slug}/"), encoding="utf-8")
     (site / "logo.svg").write_text(R.logo_svg(hub["mark"], pal, 48), encoding="utf-8")
     (site / "favicon.svg").write_text(R.logo_svg(hub["mark"], pal, 64), encoding="utf-8")
     (site / ".nojekyll").write_text("", encoding="utf-8")
@@ -360,7 +460,9 @@ def main(argv: list[str]) -> int:
         for project in group["projects"]:
             ppal = R.palette_of({"palette": project["palette"]})
             (site / "tiles" / f'{project["slug"]}.svg').write_text(R.logo_svg(project["mark"], ppal, 44), encoding="utf-8")
-            urls.append(R.SITE_ROOT + project_pages(project)["en"])
+            page_url = project_pages(project)["en"]
+            if page_url.startswith("/"):  # a sitemap lists only pages on this site
+                urls.append(R.SITE_ROOT + page_url)
     (site / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {HUB_URL}sitemap.xml\n", encoding="utf-8")
     lastmod = f"<lastmod>{hub['verified']}</lastmod>" if hub.get("verified") else ""
     (site / "sitemap.xml").write_text(

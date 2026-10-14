@@ -42,6 +42,26 @@ Commit the generated `site/` together with `page.json`. The workflow deploys
 `site/` whenever it changes; enable GitHub Pages with the "GitHub Actions"
 source once per repository.
 
+## When a repository moves
+
+GitHub Pages does not follow a repository to another account. After a move to
+an organization, the page lives at `<org>.github.io/<name>/` and the old
+`teddashh.github.io/<name>/` answers 404 until this repository covers it.
+
+- In the moved repository, set `repo` in `page.json` to the new `owner/name`
+  and re-render. `render.py` takes the page's address from that owner, so the
+  canonical, `hreflang`, `robots.txt` and sitemap point at the new site.
+- In `hub.json`, add `"repo": "owner/name"` to the project and re-render this
+  repository. Its card, its JSON-LD and the profile README then link to the
+  new page and repository, and the hub's sitemap leaves the page out because
+  it lives on another site.
+- `render_hub.py` also writes a stand-in at the old address,
+  `site/<name>/index.html`, plus `site/moved.js`, which the stand-in and the
+  404 page load. Visitors are forwarded with the rest of the path, `?lang=`
+  and the `#hash`; without scripts, a refresh opens the new page.
+- A moved page that is not in the directory goes in a top-level
+  `"moved": ["owner/name"]` list in `hub.json`.
+
 ## page.json
 
 Bilingual values are `{"en": "...", "zh": "..."}`; a plain string is
