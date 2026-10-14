@@ -2,7 +2,7 @@
    moved to another account's GitHub Pages site there, keeping the rest of the
    path, the ?lang= choice and the #hash. */
 (function () {
-  var moved = {"mcp-memory-server": "https://ted-h-com.github.io"};
+  var moved = {"AI-Intune": "https://ted-h-com.github.io", "AI-Sister": "https://ted-h-com.github.io", "TokenMonster": "https://ted-h-com.github.io", "ai-brainstorming": "https://ted-h-com.github.io", "ai-security-scanner": "https://ted-h-com.github.io", "claude-idea-review-skill": "https://ted-h-com.github.io", "mcp-memory-server": "https://ted-h-com.github.io", "multi-ai-chat": "https://ted-h-com.github.io", "multi-ai-chat-desktop": "https://ted-h-com.github.io", "multi-ai-terminal": "https://ted-h-com.github.io", "reset-therapy": "https://ted-h-com.github.io", "zhan-dou-tuo-luo": "https://ted-h-com.github.io"};
   var path = window.location.pathname;
   var slug = path.split("/")[1];
   if (Object.prototype.hasOwnProperty.call(moved, slug)) {
