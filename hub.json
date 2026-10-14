@@ -38,16 +38,16 @@
       "summary": {"en": "Multi-model chat, review, memory", "zh": "多模型對話、審查、記憶"},
       "projects": [
         {
-          "slug": "multi-ai-chat-desktop", "name": "Multi-AI Chat Desktop", "mark": "MD", "palette": "blue", "status": "active", "release": "latest",
+          "slug": "multi-ai-chat-desktop", "repo": "TED-H-com/multi-ai-chat-desktop", "name": "Multi-AI Chat Desktop", "mark": "MD", "palette": "blue", "status": "active", "release": "latest",
           "line": {
             "en": "A portable desktop app that drives your logged-in ChatGPT, Claude, Gemini, and Grok side by side through guided workflows. No API keys.",
             "zh": "可攜式桌面 app，用引導式流程同時操作你已登入的 ChatGPT、Claude、Gemini、Grok，不需要 API key。"
           },
           "stack": "Tauri 2 · React · TypeScript · Rust",
-          "links": [{"href": "https://github.com/teddashh/multi-ai-chat-desktop/releases/latest", "label": {"en": "Download", "zh": "下載"}}]
+          "links": [{"href": "https://github.com/TED-H-com/multi-ai-chat-desktop/releases/latest", "label": {"en": "Download", "zh": "下載"}}]
         },
         {
-          "slug": "multi-ai-chat", "name": "Multi-AI Chat", "mark": "MC", "palette": "amber", "status": "active", "release": "latest",
+          "slug": "multi-ai-chat", "repo": "TED-H-com/multi-ai-chat", "name": "Multi-AI Chat", "mark": "MC", "palette": "amber", "status": "active", "release": "latest",
           "line": {
             "en": "A Chrome side panel that turns the AI tabs you already have open into one multi-model workflow.",
             "zh": "Chrome 側邊面板，把你已經開著的 AI 分頁串成一條多模型工作流程。"
@@ -55,7 +55,7 @@
           "stack": "Chrome MV3 · React · TypeScript"
         },
         {
-          "slug": "multi-ai-terminal", "name": "Multi-AI Terminal", "mark": "MT", "palette": "graphite", "status": "paused", "release": "latest",
+          "slug": "multi-ai-terminal", "repo": "TED-H-com/multi-ai-terminal", "name": "Multi-AI Terminal", "mark": "MT", "palette": "graphite", "status": "paused", "release": "latest",
           "line": {
             "en": "A local workbench that runs staged multi-agent coding workflows on the headless runtimes of Claude Code, Codex, Grok, and Antigravity, with gates and a replayable evidence feed.",
             "zh": "本機工作台，在 Claude Code、Codex、Grok、Antigravity 的 headless runtime 上跑分階段的多 agent 工作流程，有關卡，也有可重播的證據紀錄。"
@@ -63,7 +63,7 @@
           "stack": "TypeScript · React · Node.js · Tauri 2"
         },
         {
-          "slug": "AI-Sister", "name": "AI-Sister", "mark": "AS", "palette": "rose", "status": "active", "release": "prerelease",
+          "slug": "AI-Sister", "repo": "TED-H-com/AI-Sister", "name": "AI-Sister", "mark": "AS", "palette": "rose", "status": "active", "release": "prerelease",
           "line": {
             "en": "A local-first desktop companion that remembers what you worked on, stays quiet most of the time, and cites a source for every answer.",
             "zh": "本機優先的桌面陪伴：記得你做過什麼，大部分時間保持安靜，每句回答都附上出處。"
@@ -71,7 +71,7 @@
           "stack": "Tauri 2 · Rust · SQLite · Windows OCR"
         },
         {
-          "slug": "ai-brainstorming", "name": "AI Brainstorming", "mark": "AB", "palette": "violet", "status": "paused",
+          "slug": "ai-brainstorming", "repo": "TED-H-com/ai-brainstorming", "name": "AI Brainstorming", "mark": "AB", "palette": "violet", "status": "paused",
           "line": {
             "en": "A small web app for idea review: pick 5, 12, or 16 rounds, leave, and come back to a Markdown report by link or email.",
             "zh": "點子審查的小型網頁 app：選 5、12 或 16 輪，先離開，之後用連結或 email 拿到 Markdown 報告。"
@@ -79,7 +79,7 @@
           "stack": "Hono · React · SQLite · OpenRouter"
         },
         {
-          "slug": "claude-idea-review-skill", "name": "Claude Idea Review Skill", "mark": "IR", "palette": "amber", "status": "stable",
+          "slug": "claude-idea-review-skill", "repo": "TED-H-com/claude-idea-review-skill", "name": "Claude Idea Review Skill", "mark": "IR", "palette": "amber", "status": "stable",
           "line": {
             "en": "A Claude Code skill that puts an idea through a 5, 12, or 16-round review panel before you spend time building it.",
             "zh": "Claude Code skill：在你花時間動手之前，先讓點子經過 5、12 或 16 輪的審查。"
@@ -117,7 +117,7 @@
           "stack": "TypeScript · Node.js · Tauri"
         },
         {
-          "slug": "TokenMonster", "name": "TokenMonster", "mark": "TM", "palette": "rose", "status": "paused", "release": "prerelease",
+          "slug": "TokenMonster", "repo": "TED-H-com/TokenMonster", "name": "TokenMonster", "mark": "TM", "palette": "rose", "status": "paused", "release": "prerelease",
           "line": {
             "en": "Tracks Claude Code, Codex, Gemini CLI, and Grok Build token use on your own machine, with a live dashboard and companions that grow with real milestones.",
             "zh": "在你自己的電腦上追蹤 Claude Code、Codex、Gemini CLI、Grok Build 的 token 用量，有即時儀表板，陪伴角色會隨真實里程碑成長。"
@@ -163,7 +163,7 @@
       "summary": {"en": "Scanner, control plane, training", "zh": "掃描、控制平面、教材"},
       "projects": [
         {
-          "slug": "ai-security-scanner", "name": "ai-security-scanner", "mark": "SS", "palette": "graphite", "status": "active", "release": "latest",
+          "slug": "ai-security-scanner", "repo": "TED-H-com/ai-security-scanner", "name": "ai-security-scanner", "mark": "SS", "palette": "graphite", "status": "active", "release": "latest",
           "line": {
             "en": "A desktop app and agent skills that run upstream open-source security tools and turn their output into one standardized report.",
             "zh": "桌面 app 與 agent skill：執行上游的開源資安工具，把結果整理成一份標準化報告。"
@@ -171,7 +171,7 @@
           "stack": "Rust · Tauri · React"
         },
         {
-          "slug": "AI-Intune", "name": "AI-Intune", "mark": "IN", "palette": "lime", "status": "active",
+          "slug": "AI-Intune", "repo": "TED-H-com/AI-Intune", "name": "AI-Intune", "mark": "IN", "palette": "lime", "status": "active",
           "line": {
             "en": "An evidence-first control plane for Linux machines that run AI agents and coding tools.",
             "zh": "以證據為本的控制平面，管理執行 AI agent 與 coding 工具的 Linux 機器。"
@@ -204,7 +204,7 @@
       "summary": {"en": "Toy, notes, utility", "zh": "玩具、筆記、工具倉庫"},
       "projects": [
         {
-          "slug": "reset-therapy", "name": "Reset Therapy", "name_zh": "重置 Therapy", "mark": "RT", "palette": "lime", "status": "toy",
+          "slug": "reset-therapy", "repo": "TED-H-com/reset-therapy", "name": "Reset Therapy", "name_zh": "重置 Therapy", "mark": "RT", "palette": "lime", "status": "toy",
           "line": {
             "en": "A bilingual anti-burnout toy: watch four fake AI quota panels burn down, then let golden dragons reset them.",
             "zh": "中英雙語的抗倦怠小玩具：看著四個假的 AI 額度面板燒光，再讓黃金龍幫你重置。"
@@ -213,7 +213,7 @@
           "links": [{"href": {"en": "/reset-therapy/play/", "zh": "/reset-therapy/play/?lang=zh"}, "label": {"en": "Play", "zh": "開始玩"}}]
         },
         {
-          "slug": "zhan-dou-tuo-luo", "name": "AI Beyblade X Notes", "name_zh": "AI 教你打陀螺", "mark": "BX", "palette": "blue", "status": "notes",
+          "slug": "zhan-dou-tuo-luo", "repo": "TED-H-com/zhan-dou-tuo-luo", "name": "AI Beyblade X Notes", "name_zh": "AI 教你打陀螺", "mark": "BX", "palette": "blue", "status": "notes",
           "line": {
             "en": "Chinese-first notes on Beyblade X: why points, not spin time, decide a match, and how to build a 3v3 deck.",
             "zh": "戰鬥陀螺 Beyblade X 中文筆記：為什麼決定勝負的是分數而不是誰轉得最久，以及怎麼配 3v3 牌組。"
