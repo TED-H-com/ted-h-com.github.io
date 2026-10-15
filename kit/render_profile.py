@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import html
 import json
+from urllib.parse import quote
 import sys
 from pathlib import Path
 
@@ -32,7 +33,7 @@ START = "<!-- projects:start -->"
 END = "<!-- projects:end -->"
 NOTE = "<!-- Generated from hub.json in teddashh/teddashh.github.io by kit/render_profile.py. -->"
 GH = "https://github.com"
-BADGE = "style=flat-square&amp;color=111111"
+BADGE = "style=flat-square&amp;labelColor=0A2342&amp;color=0969DA"
 
 TEXT = {
     "en": {
@@ -82,6 +83,41 @@ def badges(project: dict) -> str:
     return " ".join(out)
 
 
+
+def status_badge(label: str, status: str) -> str:
+    colors = {"active": "1A7F37", "stable": "1A7F37", "early": "0969DA", "paused": "465D76", "toy": "B22234", "notes": "0969DA", "utility": "0A2342"}
+    url = f"https://img.shields.io/badge/{quote(label, safe='')}-{colors.get(status, '0A2342')}?style=flat-square"
+    return f'<img alt="{html.escape(label, quote=True)}" src="{url}">'
+
+
+def section_svg(title: str, subtitle: str = "") -> str:
+    """Local, GitHub-compatible section art matching the profile hero palette."""
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 104" role="img" aria-label="{html.escape(title, quote=True)}">
+<rect width="1000" height="104" rx="12" fill="#0A2342"/>
+<path d="M12 0h976a12 12 0 0 1 12 12H0A12 12 0 0 1 12 0Z" fill="#B22234"/>
+<rect x="0" y="12" width="1000" height="3" fill="#FFFFFF"/>
+<rect x="24" y="34" width="5" height="43" rx="2" fill="#39D353"/>
+<text x="47" y="52" fill="#FFFFFF" font-family="system-ui,Segoe UI,sans-serif" font-size="26" font-weight="700">{html.escape(title)}</text>
+<text x="47" y="80" fill="#A6B8CE" font-family="system-ui,Segoe UI,sans-serif" font-size="16">{html.escape(subtitle)}</text>
+<circle cx="958" cy="52" r="7" fill="#39D353"/><path d="M926 79h42" stroke="#58A6FF" stroke-width="3"/>
+</svg>\n"""
+
+
+def profile_chrome(text: str, lang: str) -> str:
+    # These existing hand-written sections retain their claims and layout.
+    headings = {"en": ("In production.", "Public work."), "zh": ("正在線上運作。", "公開作品。")}
+    for key, heading in zip(("production", "public"), headings[lang]):
+        image = f'<p><img src="./assets/profile-section-{key}-{lang}.svg" width="100%" alt="{heading}"></p>'
+        marker = f"## {heading}"
+        if image not in text:
+            text = text.replace(marker, marker + "\n\n" + image)
+    text = text.replace('<code>LIVE / MULTI-AI</code>', status_badge("LIVE / MULTI-AI", "active"))
+    text = text.replace("https://teddashh.github.io/multi-ai-chat/", "https://ted-h-com.github.io/multi-ai-chat/")
+    text = text.replace("https://teddashh.github.io/github-profile-summary-cards/", "https://ted-h-com.github.io/github-profile-summary-cards/")
+    text = text.replace("https://github.com/teddashh/github-profile-summary-cards", "https://github.com/TED-H-com/github-profile-summary-cards")
+    return text
+
+
 def row(project: dict, lang: str) -> str:
     t = TEXT[lang]
     page = absolute(H.project_pages(project)[lang])
@@ -94,7 +130,7 @@ def row(project: dict, lang: str) -> str:
     return f"""  <tr>
     <td width="32%" valign="top">
       <strong><a href="{page}">{html.escape(display_name(project, lang))}</a></strong><br>
-      <code>{html.escape(chip)}</code>
+      {status_badge(chip, project["status"])}
     </td>
     <td width="68%" valign="top">
       {R.inline(project["line"][lang])}<br><br>
@@ -111,7 +147,7 @@ def readme_block(hub: dict, lang: str) -> str:
     parts = [START, NOTE, "", t["intro"].replace("{count}", str(count))]
     for group in hub["groups"]:
         kicker = group["kicker"][lang].replace(" · ", " / ")
-        parts += ["", f"<p><code>{html.escape(kicker.upper() if lang == 'en' else kicker)}</code></p>", "",
+        parts += ["", f'<p><img src="./assets/profile-group-{group["id"]}-{lang}.svg" width="100%" alt="{html.escape(kicker, quote=True)}"></p>', "",
                   '<table width="100%">', "\n".join(row(p, lang) for p in group["projects"]), "</table>"]
     parts += ["", f'<p align="right"><a href="{t["hub"]}"><strong>{t["all"].replace("{count}", str(count))}</strong></a></p>', END]
     return "\n".join(parts)
@@ -184,7 +220,12 @@ def outputs(hub: dict, profile: Path) -> dict[Path, str]:
     files: dict[Path, str] = {}
     for name, lang in (("README.md", "en"), ("README.zh-TW.md", "zh")):
         path = profile / name
-        files[path] = splice(path.read_text(encoding="utf-8"), readme_block(hub, lang), path)
+        files[path] = profile_chrome(splice(path.read_text(encoding="utf-8"), readme_block(hub, lang), path), lang)
+        for group in hub["groups"]:
+            files[profile / "assets" / f'profile-group-{group["id"]}-{lang}.svg'] = section_svg(group["kicker"][lang], group["summary"][lang])
+        titles = {"en": (("production", "In production", "Ai-Sister Web · Multi-AI workflows"), ("public", "Public work", "Open-source projects · Verified destinations")), "zh": (("production", "正在線上運作", "Ai-Sister Web · 多 AI 工作流程"), ("public", "公開作品", "開源專案 · 已確認的專案連結"))}
+        for key, title, subtitle in titles[lang]:
+            files[profile / "assets" / f"profile-section-{key}-{lang}.svg"] = section_svg(title, subtitle)
     files[profile / "projects" / "README.md"] = directory(hub)
     by_slug = {p["slug"].lower(): p for g in hub["groups"] for p in g["projects"]}
     for path in sorted((profile / "projects").glob("*.md")):
@@ -222,6 +263,7 @@ def main(argv: list[str]) -> int:
         print("profile: ok" if not stale else f"profile: {len(stale)} file(s) out of date")
         return 1 if stale else 0
     for p in stale:
+        p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(files[p], encoding="utf-8")
         print(f"wrote {p.relative_to(profile)}")
     print(f"profile: {len(stale)} file(s) updated, {len(files) - len(stale)} unchanged")
