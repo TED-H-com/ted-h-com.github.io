@@ -21,6 +21,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: github.repository == 'teddashh/teddashh.github.io' || github.repository == 'TED-H-com/ted-h-com.github.io'
     name: Deploy static site
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -33,6 +34,12 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Validate and render this host
+        run: |
+          python3 kit/test_hub_hosts.py
+          node --test kit/flow.test.js
+          python3 kit/render_hub.py --site-owner "${GITHUB_REPOSITORY_OWNER,,}"
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
 
@@ -44,3 +51,4 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+
