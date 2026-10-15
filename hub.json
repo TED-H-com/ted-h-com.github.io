@@ -183,7 +183,8 @@
           "stack": "Go · Linux"
         },
         {
-          "slug": "idn-homograph-example", "name": "IDN Homograph Demo", "mark": "IDN",
+          "slug": "idn-homograph-example",
+          "repo": "TED-H-com/idn-homograph-example", "name": "IDN Homograph Demo", "mark": "IDN",
           "palette": {"base": "graphite", "accent": "#ffd5cc", "signal": "#e5372b", "kicker": "#b42318"},
           "status": "stable",
           "line": {
@@ -214,7 +215,7 @@
             "zh": "中英雙語的抗倦怠小玩具：看著四個假的 AI 額度面板燒光，再讓黃金龍幫你重置。"
           },
           "stack": "HTML · JavaScript",
-          "links": [{"href": {"en": "/reset-therapy/play/", "zh": "/reset-therapy/play/?lang=zh"}, "label": {"en": "Play", "zh": "開始玩"}}]
+          "links": [{"href": {"en": "https://ted-h-com.github.io/reset-therapy/play/", "zh": "https://ted-h-com.github.io/reset-therapy/play/?lang=zh"}, "label": {"en": "Play", "zh": "開始玩"}}]
         },
         {
           "slug": "zhan-dou-tuo-luo", "repo": "TED-H-com/zhan-dou-tuo-luo", "name": "AI Beyblade X Notes", "name_zh": "AI 教你打陀螺", "mark": "BX", "palette": "blue", "status": "notes",
