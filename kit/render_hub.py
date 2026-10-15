@@ -4,6 +4,10 @@
 Usage:
     python3 kit/render_hub.py [repo-root]           # reads <repo-root>/hub.json, writes site/
     python3 kit/render_hub.py [repo-root] --check   # validate only
+    python3 kit/render_hub.py --site-owner ted-h-com  # organization root
+
+Deployment origin is independent of personal identity and project ownership.
+Each host gets its own canonical URL, sitemap and cross-owner redirect stubs.
 
 Shares the look, language switch, and validation rules of the project-page
 kit (render.py). An optional "flows" list uses the same schema as a project
@@ -19,6 +23,7 @@ the directory. Without either, the output does not change.
 
 from __future__ import annotations
 
+import argparse
 import html
 import json
 import re
@@ -31,7 +36,8 @@ sys.path.insert(0, str(KIT))
 
 import render as R  # noqa: E402
 
-HUB_URL = f"{R.SITE_ROOT}/"
+SITE_ROOT = R.SITE_ROOT
+HUB_URL = f"{SITE_ROOT}/"
 CSP = ("default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self' data:; "
        "connect-src 'none'; base-uri 'none'; form-action 'none'")
 
@@ -75,8 +81,6 @@ def validate(hub: dict) -> list[str]:
             problems.append(f"moved: {repo!r} must be owner/name")
         elif name in seen:
             problems.append(f"moved: {name} is in the directory, set its repo instead")
-        elif owner.lower() == R.OWNER.lower():
-            problems.append(f"moved: {repo} is still under {R.OWNER}")
     problems.extend(R.validate_flows(hub))
     return problems
 
@@ -108,12 +112,12 @@ def project_pages(project: dict) -> dict:
     if isinstance(page, str):
         return {"en": page, "zh": page}
     root = R.site_root_for(project)
-    base = "" if root == R.SITE_ROOT else root
+    base = "" if root == SITE_ROOT else root
     return {"en": f"{base}/{slug}/", "zh": f"{base}/{slug}/?lang=zh-TW"}
 
 
 def absolute(url: str) -> str:
-    return R.SITE_ROOT + url if url.startswith("/") else url
+    return SITE_ROOT + url if url.startswith("/") else url
 
 
 def moved_pages(hub: dict) -> dict:
@@ -122,11 +126,13 @@ def moved_pages(hub: dict) -> dict:
     for group in hub["groups"]:
         for project in group["projects"]:
             root = R.site_root_for(project)
-            if root != R.SITE_ROOT:
+            if root != SITE_ROOT:
                 moved[project["slug"]] = (project["name"], root)
     for repo in hub.get("moved", []):
         name = repo.split("/")[1]
-        moved[name] = (name, R.site_root_for({"repo": repo}))
+        origin = R.site_root_for({"repo": repo})
+        if origin != SITE_ROOT:
+            moved[name] = (name, origin)
     return moved
 
 
@@ -379,7 +385,7 @@ MOVED_JS = """/* Generated from hub.json by kit/render_hub.py. Sends a visitor o
   var moved = {moved};
   var path = window.location.pathname;
   var slug = path.split("/")[1];
-  if (Object.prototype.hasOwnProperty.call(moved, slug)) {
+  if (Object.prototype.hasOwnProperty.call(moved, slug) && moved[slug] !== window.location.origin) {
     window.location.replace(moved[slug] + path + window.location.search + window.location.hash);
   }
 })();
@@ -413,8 +419,16 @@ GROUP_FLOW_CSS = """
 
 
 def main(argv: list[str]) -> int:
-    root = Path(argv[1]).resolve() if len(argv) > 1 and not argv[1].startswith("--") else KIT.parent
-    check_only = "--check" in argv
+    global SITE_ROOT, HUB_URL
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("root", nargs="?", type=Path, default=KIT.parent)
+    parser.add_argument("--check", action="store_true")
+    parser.add_argument("--site-owner", choices=("teddashh", "ted-h-com"), default="teddashh")
+    args = parser.parse_args(argv[1:])
+    root = args.root.resolve()
+    check_only = args.check
+    SITE_ROOT = f"https://{args.site_owner}.github.io"
+    HUB_URL = SITE_ROOT + "/"
     hub = json.loads((root / "hub.json").read_text(encoding="utf-8"))
     problems = validate(hub)
     if problems:
@@ -462,7 +476,7 @@ def main(argv: list[str]) -> int:
             (site / "tiles" / f'{project["slug"]}.svg').write_text(R.logo_svg(project["mark"], ppal, 44), encoding="utf-8")
             page_url = project_pages(project)["en"]
             if page_url.startswith("/"):  # a sitemap lists only pages on this site
-                urls.append(R.SITE_ROOT + page_url)
+                urls.append(SITE_ROOT + page_url)
     (site / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {HUB_URL}sitemap.xml\n", encoding="utf-8")
     lastmod = f"<lastmod>{hub['verified']}</lastmod>" if hub.get("verified") else ""
     (site / "sitemap.xml").write_text(
@@ -485,3 +499,4 @@ if __name__ == "__main__":
     except R.PageError as exc:
         print(f"error: {exc}")
         sys.exit(1)
+
