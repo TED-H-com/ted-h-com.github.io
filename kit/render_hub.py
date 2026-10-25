@@ -161,7 +161,7 @@ def render_card(project: dict) -> str:
         links.append(R.anchor(link))
     return (
         f'<article class="project-card" id="p-{R.href(slug.lower())}">'
-        f'<div class="project-head"><img src="tiles/{R.href(slug)}.svg" alt="" width="44" height="44">'
+        f'<div class="project-head"><img src="tiles/{R.href(slug)}.svg" alt="" width="44" height="44" loading="lazy">'
         f'<div><h3>{per_lang_link(urls, name)}</h3>{status_html}</div></div>'
         f'{R.bi(project["line"], "p")}'
         f'<div class="project-stack">{R.inline(project["stack"])}</div>'
