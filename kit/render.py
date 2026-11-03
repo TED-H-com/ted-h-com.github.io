@@ -138,14 +138,17 @@ class PageError(Exception):
 # ----------------------------------------------------------------------------
 
 def walk_strings(node, path="$"):
-    if isinstance(node, str):
-        yield path, node
-    elif isinstance(node, dict):
-        for key, value in node.items():
-            yield from walk_strings(value, f"{path}.{key}")
-    elif isinstance(node, list):
-        for index, value in enumerate(node):
-            yield from walk_strings(value, f"{path}[{index}]")
+    stack = [(node, path)]
+    while stack:
+        curr_node, curr_path = stack.pop()
+        if isinstance(curr_node, str):
+            yield curr_path, curr_node
+        elif isinstance(curr_node, dict):
+            for key, value in curr_node.items():
+                stack.append((value, f"{curr_path}.{key}"))
+        elif isinstance(curr_node, list):
+            for index, value in enumerate(curr_node):
+                stack.append((value, f"{curr_path}[{index}]"))
 
 
 def validate(page: dict) -> list[str]:
@@ -204,16 +207,19 @@ def validate(page: dict) -> list[str]:
 
 
 def walk_bilingual(node, path="$"):
-    if isinstance(node, dict):
-        if set(node) <= {"en", "zh"} and (set(node) & {"en", "zh"}):
-            if all(isinstance(value, str) for value in node.values()):
-                yield path, node
-                return
-        for key, value in node.items():
-            yield from walk_bilingual(value, f"{path}.{key}")
-    elif isinstance(node, list):
-        for index, value in enumerate(node):
-            yield from walk_bilingual(value, f"{path}[{index}]")
+    stack = [(node, path)]
+    while stack:
+        curr_node, curr_path = stack.pop()
+        if isinstance(curr_node, dict):
+            if set(curr_node) <= {"en", "zh"} and (set(curr_node) & {"en", "zh"}):
+                if all(isinstance(value, str) for value in curr_node.values()):
+                    yield curr_path, curr_node
+                    continue
+            for key, value in curr_node.items():
+                stack.append((value, f"{curr_path}.{key}"))
+        elif isinstance(curr_node, list):
+            for index, value in enumerate(curr_node):
+                stack.append((value, f"{curr_path}[{index}]"))
 
 
 def _index(value) -> bool:
@@ -376,13 +382,21 @@ def validate_flows(page: dict) -> list[str]:
 
 def inline(text: str) -> str:
     """Escape text but keep a tiny inline subset: em, strong, code, br, a[href]."""
+    if "&" not in text and "<" not in text and ">" not in text and '"' not in text and "'" not in text:
+        return text
+
     out = html.escape(text, quote=True)
-    out = INLINE_TAG.sub(lambda m: f"<{m.group(1)}{m.group(2)}>", out)
-    # a short command or name in running text stays on one line ("claude --resume")
-    out = SHORT_CODE.sub(lambda m: f'<code class="nowrap">{m.group(1)}</code>'
-                         if len(html.unescape(m.group(1))) <= 28 else m.group(0), out)
-    out = INLINE_LINK.sub(lambda m: f'<a href="{m.group(1)}">', out)
-    return out.replace("&lt;/a&gt;", "</a>")
+
+    if "&lt;" in out:
+        out = INLINE_TAG.sub(lambda m: f"<{m.group(1)}{m.group(2)}>", out)
+        out = INLINE_LINK.sub(lambda m: f'<a href="{m.group(1)}">', out)
+        out = out.replace("&lt;/a&gt;", "</a>")
+
+    if "<code>" in out:
+        out = SHORT_CODE.sub(lambda m: f'<code class="nowrap">{m.group(1)}</code>'
+                             if len(html.unescape(m.group(1))) <= 28 else m.group(0), out)
+
+    return out
 
 
 def attr(text: str) -> str:
@@ -397,9 +411,9 @@ def bi(value, tag="span", cls="", extra=""):
     """Render a bilingual pair (or a single language-neutral string)."""
     if value is None:
         return ""
-    if is_bi(value):
-        en_cls = f"lang-en {cls}".strip()
-        zh_cls = f"lang-zh {cls}".strip()
+    if type(value) is dict and "en" in value and "zh" in value:
+        en_cls = f"lang-en {cls}" if cls else "lang-en"
+        zh_cls = f"lang-zh {cls}" if cls else "lang-zh"
         return (f'<{tag} class="{en_cls}"{extra}>{inline(value["en"])}</{tag}>'
                 f'<{tag} class="{zh_cls}" lang="zh-Hant"{extra}>{inline(value["zh"])}</{tag}>')
     cls_attr = f' class="{cls}"' if cls else ""
