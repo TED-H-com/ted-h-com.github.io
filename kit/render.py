@@ -149,6 +149,7 @@ def walk_strings(node, path="$"):
 
 
 def validate(page: dict) -> list[str]:
+    """Validates the schema and values in page.json against kit rules."""
     problems: list[str] = []
     for path, text in walk_strings(page):
         for char, name in BANNED_DASHES.items():
@@ -697,6 +698,7 @@ def place_flows(parts: list, page: dict) -> list:
 
 
 def render_page(page: dict, assets: dict) -> str:
+    """Generates the HTML string for a bilingual project page based on page.json data."""
     pal = palette_of(page)
     repo = page["repo"]
     slug = page["slug"]
@@ -1078,6 +1080,7 @@ def collect_assets(page: dict, repo_dir: Path) -> dict:
 
 
 def main(argv: list[str]) -> int:
+    """CLI entrypoint for rendering a project page."""
     if len(argv) < 2:
         print(__doc__)
         return 2
