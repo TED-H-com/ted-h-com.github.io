@@ -21,7 +21,7 @@
 
 ## 驗證
 
-執行 `python3 kit/test_hub_hosts.py`、`python3 kit/test_render_profile.py` 和 `node --test kit/flow.test.js`。修改共用清單後重新產生目錄和個人頁，發布前檢查中英文的手機與桌面版面。
+執行 `python3 -m unittest discover kit` 和 `node --test kit/flow.test.js`。修改共用清單後重新產生目錄和個人頁，發布前檢查中英文的手機與桌面版面。
 
 ## 授權
 

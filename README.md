@@ -22,7 +22,7 @@ The hub hosts the directory and redirects from older project URLs. Kit pages are
 
 ## Validation
 
-Run `python3 kit/test_hub_hosts.py`, `python3 kit/test_render_profile.py` and `node --test kit/flow.test.js`. Render the hub and profile after editing the shared list, and check both languages on mobile and desktop before publishing.
+Run `python3 -m unittest discover kit` and `node --test kit/flow.test.js`. Render the hub and profile after editing the shared list, and check both languages on mobile and desktop before publishing.
 
 ## License
 
