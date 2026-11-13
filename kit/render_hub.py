@@ -43,6 +43,7 @@ CSP = ("default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self' 
 
 
 def validate(hub: dict) -> list[str]:
+    """Validates hub.json against kit formatting and structure rules."""
     problems: list[str] = []
     for path, text in R.walk_strings(hub):
         for char, name in R.BANNED_DASHES.items():
@@ -150,6 +151,7 @@ def per_lang_link(urls: dict, label: dict, cls: str = "") -> str:
 
 
 def render_card(project: dict) -> str:
+    """Renders the HTML for an individual project tile on the hub page."""
     slug = project["slug"]
     urls = project_pages(project)
     status = project["status"]
@@ -182,6 +184,7 @@ def render_group_flow(flow: dict) -> str:
 
 
 def render_hub(hub: dict) -> str:
+    """Generates the full HTML string for the main directory page."""
     groups = hub["groups"]
     count = sum(len(g["projects"]) for g in groups)
     hero = hub["hero"]
@@ -425,6 +428,7 @@ GROUP_FLOW_CSS = """
 
 
 def main(argv: list[str]) -> int:
+    """CLI entrypoint for rendering the project hub."""
     global SITE_ROOT, HUB_URL
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("root", nargs="?", type=Path, default=KIT.parent)
